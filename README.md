@@ -1,4 +1,4 @@
-# 🖥 Trivy 기반 이미지 보안 모니터링 시스템
+# 🖥 Trivy 기반 이미지 모니터링 시스템
 
 ## 참여 인원 👨‍👨‍👧‍👧
 | <img src="https://avatars.githubusercontent.com/u/83341978?v=4" width="150" height="150"/> | <img src="https://avatars.githubusercontent.com/u/129728196?v=4" width="150" height="150"/> | <img src="https://avatars.githubusercontent.com/u/104816148?v=4" width="150" height="150"/> | <img src="https://avatars.githubusercontent.com/u/86452494?v=4" width="150" height="150"/> |
