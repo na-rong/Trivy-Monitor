@@ -81,7 +81,7 @@ Total: 145 (HIGH: 145, CRITICAL: 0)
 
 ### 1. 🛠️ Trivy 및 jq 설치
 
-먼저, **Trivy**와 **jq**를 설치합니다.
+ **Trivy**와 **jq**를 설치합니다.
 `jq`는 JSON 데이터를 처리하는 도구입니다. Trivy의 JSON 결과를 필터링하여 취약점 정보를 추출하기 위해 사용됩니다:
 
 ```bash
@@ -95,7 +95,7 @@ sudo apt-get install jq
 
 ## 2. 🔍 Trivy 스캔 스크립트 작성
 
-아래의 스크립트는 Trivy를 사용하여 Docker 이미지를 스캔하고, Critical 취약점이 발견될 경우 Slack 알림을 전송하는 역할을 합니다.
+아래의 스크립트는 Trivy를 사용하여 Docker 이미지를 스캔하고, Critical 취약점이 발견될 경우 Slack 알림을 전송 합니다.
 
 ```bash
 #!/bin/bash
