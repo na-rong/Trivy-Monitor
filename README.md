@@ -1,4 +1,4 @@
-# 🖥 Trivy 기반 동적 컨테이너 보안 모니터링 시스템
+# 🖥 Trivy 기반 이미지 보안 모니터링 시스템
 
 ## 참여 인원 👨‍👨‍👧‍👧
 | <img src="https://avatars.githubusercontent.com/u/83341978?v=4" width="150" height="150"/> | <img src="https://avatars.githubusercontent.com/u/129728196?v=4" width="150" height="150"/> | <img src="https://avatars.githubusercontent.com/u/104816148?v=4" width="150" height="150"/> | <img src="https://avatars.githubusercontent.com/u/86452494?v=4" width="150" height="150"/> |
@@ -53,7 +53,10 @@ Total: 145 (HIGH: 145, CRITICAL: 0)
 +--------------------------+------------------+----------+-------------------+----------------------+---------------------------------------+
 |         LIBRARY          | VULNERABILITY ID | SEVERITY | INSTALLED VERSION |    FIXED VERSION     |                 TITLE                 |
 +--------------------------+------------------+----------+-------------------+----------------------+---------------------------------------+
-| libssl1.1                | CVE-2023-0464    | HIGH     | 1.1.1n-0+deb11u4  | 1.1.1n-0+deb11u4+exp | openssl: Denial of service           |
+| libssl1.1                | CVE-2023-0464    | HIGH     | 1.1.1n-0+deb11u4  | 1.1.1n-0+deb11u4+exp | openssl: Denial of ## 📋 **프로젝트 목적**
+
+1. **자동화된 취약점 스캐닝**: 컨테이너 이미지의 **Critical** 취약점을 정기적으로 탐지하여 보안 위협을 최소화.
+2. **실시간 보안 알림**: **Slack**과의 연동을 통해 Critical 취약점이 발견될 경우 즉시 알림을 수신, 빠른 대응 가능.service           |
 |                          |                  |          |                   |                      | vulnerability in DTLS                 |
 +--------------------------+------------------+----------+-------------------+----------------------+---------------------------------------+
 ```
@@ -63,4 +66,87 @@ Total: 145 (HIGH: 145, CRITICAL: 0)
 - INSTALLED VERSION: 현재 설치된 버전
 - FIXED VERSION: 취약점이 수정된 버전
 - TITLE: 취약점에 대한 간단한 설명
+
+--- 
+<br>
+
+# 🛡️ 응용: Trivy를 사용하여 이미지 스캔 및 Critical 취약점 Slack 알림 설정
+
+## 📋 **프로젝트 목적**
+
+1. **자동화된 취약점 스캐닝**: 컨테이너 이미지의 **Critical** 취약점을 정기적으로 탐지하여 보안 위협을 최소화.
+2. **실시간 보안 알림**: **Slack**과의 연동을 통해 Critical 취약점이 발견될 경우 즉시 알림을 수신, 빠른 대응 가능.
+3. **DevOps 파이프라인 통합**: 지속적 통합/배포(CI/CD) 환경에서 보안 점검을 강화하여 개발 및 운영 프로세스의 보안성 향상.
+
+## ⚙️ **프로젝트 구성**
+
+### 1. 🛠️ Trivy 및 jq 설치
+
+먼저, **Trivy**와 **jq**를 설치합니다.
+`jq`는 JSON 데이터를 처리하는 도구입니다. Trivy의 JSON 결과를 필터링하여 취약점 정보를 추출하기 위해 사용됩니다:
+
+```bash
+# Trivy 설치
+sudo apt-get update
+sudo apt-get install trivy
+
+# jq 설치
+sudo apt-get install jq
+```
+
+## 2. 🔍 Trivy 스캔 스크립트 작성
+
+아래의 스크립트는 Trivy를 사용하여 Docker 이미지를 스캔하고, Critical 취약점이 발견될 경우 Slack 알림을 전송하는 역할을 합니다.
+
+```bash
+#!/bin/bash
+
+# 스캔할 이미지 이름을 지정 (예: nginx:latest)
+IMAGE_NAME="nginx:latest"
+
+# 스캔 결과를 JSON 파일로 저장
+trivy image --severity CRITICAL --format json --output /tmp/trivy-result.json $IMAGE_NAME
+
+# 스캔 결과에서 Critical 취약점이 있는지 확인
+CRITICAL_COUNT=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length' /tmp/trivy-result.json 2>/dev/null || echo 0)
+
+# Critical 취약점이 1개 이상 발견되면 Slack으로 알림 전송
+if [ "$CRITICAL_COUNT" -gt 0 ]; then
+  # Critical 취약점의 세부 정보를 슬랙 메시지에 포함
+  CRITICAL_DETAILS=$(jq -r '.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL") | "\(.VulnerabilityID): \(.Title)\nPackage: \(.PkgName) \(.InstalledVersion)\nDescription: \(.Description)\nSeverity: \(.Severity)\n"' /tmp/trivy-result.json 2>/dev/null || echo "No critical vulnerabilities found")
+
+  # Slack 알림 전송
+  curl -X POST -H 'Content-type: application/json' \
+  --data "{\"text\": \"Critical vulnerabilities found in $IMAGE_NAME!\", \"attachments\": [{ \"title\": \"Trivy Scan Results\", \"text\": \"$CRITICAL_DETAILS\" }]}" \
+  https://hooks.slack.com/services/YOUR_SLACK_WEBHOOK_URL
+else
+  echo "No Critical vulnerabilities found in $IMAGE_NAME"
+fi
+```
+
+## 3. 🕒 Crontab을 사용하여 정기적으로 스캔
+다음으로, crontab을 사용하여 Trivy 스캔을 정기적으로 실행할 수 있습니다. 여기서는 매일 새벽 2시에 스캔이 실행되도록 설정합니다.
+### 1) 스크립트 파일에 실행 권한 부여:
+```bash
+sudo chmod +x /usr/local/bin/trivy-scan.sh
+```
+### 2) crontab 설정:
+```bash
+sudo crontab -e
+```
+이 명령어로 crontab을 열고 다음과 같이 새벽 2시에 스크립트를 실행하도록 설정합니다:
+```
+0 2 * * * /usr/local/bin/trivy-scan.sh
+```
+이 설정을 저장하면 매일 새벽 2시에 nginx
+이미지가 스캔되며, Critical 취약점이 발견될 경우 Slack으로 알림이 전송됩니다.
+
+## 4. 🔔 Slack 알림 설정
+Slack 알림을 받기 위해서는 Slack Webhook URL을 설정해야 합니다. Slack Incoming Webhooks을 사용하여 Webhook URL을 생성한 후, 스크립트에 해당 URL을 입력하세요.
+```bash
+https://hooks.slack.com/services/YOUR_SLACK_WEBHOOK_URL
+```
+## 🎉 완료
+이제 Trivy를 사용하여 이미지의 Critical 취약점을 정기적으로 스캔하고, Slack을 통해 실시간으로 알림을 받을 수 있습니다! 🚀
+![image](https://github.com/user-attachments/assets/dbee7e51-11b4-4aa5-a813-f83ef0754248)
 
