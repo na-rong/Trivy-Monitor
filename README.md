@@ -1,4 +1,4 @@
-# Trivy 기반 동적 컨테이너 보안 모니터링 시스템 🖥
+# 🖥 Trivy 기반 동적 컨테이너 보안 모니터링 시스템
 
 ## 팀원 👨‍👨‍👧‍👧
 | <img src="https://avatars.githubusercontent.com/u/83341978?v=4" width="150" height="150"/> | <img src="https://avatars.githubusercontent.com/u/129728196?v=4" width="150" height="150"/> | <img src="https://avatars.githubusercontent.com/u/104816148?v=4" width="150" height="150"/> | <img src="https://avatars.githubusercontent.com/u/86452494?v=4" width="150" height="150"/> |
